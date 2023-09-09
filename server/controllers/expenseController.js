@@ -3,7 +3,7 @@ const Expense = require('../models/expenseModel');
 const Category = require('../models/categoryModel');
 
 const getExpenses = async (req, res) => {
-    const expenses = await Expense.find({}).sort({ createdAt: -1 });
+    const expenses = await Expense.find({}).sort({ createdAt: -1 }).populate('category');
 
     res.status(200).json(expenses);
 }
@@ -25,7 +25,7 @@ const getExpense = async (req, res) => {
 }
 
 const createExpense = async (req, res) => {
-    const { title, description, amount, category, note } = req.body;
+    const { title, description, amount, category, note, userDefinedDate } = req.body;
 
     
     if (!mongoose.Types.ObjectId.isValid(category)) {
@@ -37,8 +37,29 @@ const createExpense = async (req, res) => {
         return res.status(400).json({ error: 'The category selected does not exist in the database' });
     }
 
+    let emptyFields = [];
+
+    if (!title) {
+        emptyFields.push('title');
+    }
+    if (!description) {
+        emptyFields.push('description');
+    }
+    if (!amount) {
+        emptyFields.push('amount');
+    }
+    if (!category) {
+        emptyFields.push('category');
+    }
+    if (!userDefinedDate) {
+        emptyFields.push('userDefinedDate');
+    }
+    if (emptyFields.length > 0) {
+        return res.status(400).json({ error: 'Please fill in all the fields', emptyFields });
+    }
+
     try {
-        const expense = await Expense.create({ title, description, amount, category, note });
+        const expense = await Expense.create({ title, description, amount, category, note, userDefinedDate });
         res.status(200).json(expense);
     }
     catch(err) {
@@ -64,7 +85,7 @@ const deleteExpense = async (req, res) => {
 
 const updateExpense = async (req, res) => {
     const { id } = req.params;
-    const { category } = req.body;
+    const { title, description, amount, category, note, userDefinedDate } = req.body;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
         return res.status(400).json({ error: 'No such expense tracked' });
@@ -78,6 +99,27 @@ const updateExpense = async (req, res) => {
         if(!categoryExists) {
             return res.status(400).json({ error: 'The category selected does not exist in the database' });
         }
+    }
+
+    let emptyFields = [];
+
+    if (!title) {
+        emptyFields.push('title');
+    }
+    if (!description) {
+        emptyFields.push('description');
+    }
+    if (!amount) {
+        emptyFields.push('amount');
+    }
+    if (!category) {
+        emptyFields.push('category');
+    }
+    if (!userDefinedDate) {
+        emptyFields.push('userDefinedDate');
+    }
+    if (emptyFields.length > 0) {
+        return res.status(400).json({ error: 'Please fill in all the fields', emptyFields });
     }
 
     const expense = await Expense.findByIdAndUpdate({ _id: id }, { ...req.body }, { new: true });

@@ -21,6 +21,10 @@ const expenseSchema = new Schema({
     },
     note: {
         type: String
+    },
+    userDefinedDate: {
+        type: Date,
+        required: true
     }
 }, { timestamps: true });
 
